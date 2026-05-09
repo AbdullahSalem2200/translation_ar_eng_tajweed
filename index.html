@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sheikh Translator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0f1e;
+      --surface:   #111827;
+      --surface2:  #1f2937;
+      --border:    #1f2937;
+      --border2:   #374151;
+      --text:      #f9fafb;
+      --muted:     #9ca3af;
+      --dim:       #4b5563;
+      --accent:    #38bdf8;
+      --accent-dk: #0284c7;
+      --green:     #34d399;
+      --green-dk:  #059669;
+      --red:       #f87171;
+      --gold:      #fbbf24;
+      --arabic-font: 'Amiri', 'Noto Naskh Arabic', serif;
+      --ui-font:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: var(--ui-font);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      flex-shrink: 0;
+      padding: 14px 20px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .header-text p {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* ── Panels ──────────────────────────────────────── */
+    .panels {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--bg);
+    }
+    .panel.ar-panel { background: #0d1526; }
+    .panel.en-panel { background: #0a0f1e; }
+
+    /* ── Panel header bar ────────────────────────────── */
+    .panel-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title span {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .lang-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 20px;
+      background: var(--border2);
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .lang-badge.active { background: var(--accent); color: #fff; }
+    .lang-badge.out    { background: var(--green); color: #fff; }
+
+    .panel-actions { display: flex; gap: 6px; align-items: center; }
+
+    /* ── Icon buttons ────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .btn-ghost {
+      background: none;
+      border-color: var(--border2);
+      color: var(--muted);
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+    .btn-mic {
+      background: none;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-mic:hover { background: var(--accent); color: #fff; }
+    .btn-mic.recording {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .btn-read {
+      background: none;
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .btn-read:hover { background: var(--green); color: #fff; }
+
+    /* ── Translate button ────────────────────────────── */
+    .translate-row {
+      flex-shrink: 0;
+      padding: 0 14px 10px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+    }
+    .btn-translate {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--accent-dk), #6366f1);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .btn-translate:hover { opacity: 0.88; }
+    .btn-translate:active { opacity: 0.75; }
+
+    /* ── Direction divider ───────────────────────────── */
+    .divider {
+      flex-shrink: 0;
+      height: 36px;
+      background: var(--surface);
+      border-top: 1px solid var(--border2);
+      border-bottom: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--dim);
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .divider-arrow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+    }
+    .divider-arrow svg { flex-shrink: 0; }
+
+    /* ── Textareas ───────────────────────────────────── */
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 14px 16px;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--text);
+      resize: none;
+      min-height: 0;
+      width: 100%;
+      font-family: var(--ui-font);
+    }
+    textarea::placeholder { color: var(--dim); }
+    textarea[dir="rtl"] {
+      font-family: var(--arabic-font);
+      font-size: 1.25rem;
+      line-height: 1.9;
+      color: #e2e8f0;
+    }
+    textarea[readonly] {
+      color: #a5f3fc;
+      cursor: default;
+    }
+
+    /* ── Status bar ──────────────────────────────────── */
+    .status-bar {
+      flex-shrink: 0;
+      padding: 5px 14px;
+      font-size: 0.7rem;
+      color: var(--dim);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-bar.error   { color: var(--red); }
+    .status-bar.success { color: var(--green); }
+    .status-bar.loading { color: var(--gold); }
+
+    .char-count { font-size: 0.65rem; color: var(--dim); margin-left: auto; }
+
+    /* ── Bottom bar ──────────────────────────────────── */
+    .bottom-bar {
+      flex-shrink: 0;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: var(--surface);
+      border-top: 1px solid var(--border2);
+      display: flex;
+      gap: 8px;
+    }
+    #clear-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      color: var(--muted);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--ui-font);
+    }
+    #clear-btn:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── Spinner ─────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 11px; height: 11px;
+      border: 2px solid #fbbf2440;
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse { 0%,100% { opacity:1; box-shadow:0 0 0 0 #ef444460; } 60% { opacity:0.8; box-shadow:0 0 0 6px transparent; } }
+
+    /* ── Mobile tweaks ───────────────────────────────── */
+    @media (max-width: 480px) {
+      header { padding: 10px 14px; }
+      .panel-header { padding: 7px 12px; }
+      textarea { padding: 10px 12px; font-size: 0.98rem; }
+      textarea[dir="rtl"] { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">&#x1F54C;</div>
+  <div class="header-text">
+    <h1>Sheikh Translator</h1>
+    <p>Speak or type Arabic &mdash; get instant English translation</p>
+  </div>
+</header>
+
+<div class="panels">
+
+  <!-- ARABIC INPUT PANEL -->
+  <div class="panel ar-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>Arabic</span>
+        <span class="lang-badge active" id="ar-badge">input</span>
+      </div>
+      <div class="panel-actions">
+        <button class="btn btn-mic" id="ar-mic-btn">&#x1F3A4; Speak</button>
+        <button class="btn btn-read" id="ar-tts-btn">&#x25B6; Read</button>
+        <button class="btn btn-ghost" id="ar-copy-btn">Copy</button>
+      </div>
+    </div>
+    <textarea
+      id="ar-text"
+      placeholder="&#x627;&#x643;&#x62A;&#x628; &#x623;&#x648; &#x627;&#x646;&#x637;&#x642; &#x628;&#x627;&#x644;&#x639;&#x631;&#x628;&#x64A;&#x629;..."
+      dir="rtl"
+      spellcheck="false"
+    ></textarea>
+    <div class="translate-row">
+      <button class="btn-translate" id="translate-btn">Translate to English</button>
+    </div>
+    <div class="status-bar" id="ar-status">
+      <span id="ar-status-text"></span>
+      <span class="char-count" id="ar-char-count">0 chars</span>
+    </div>
+  </div>
+
+  <!-- DIRECTION DIVIDER -->
+  <div class="divider">
+    <div class="divider-arrow">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+      </svg>
+      Arabic to English
+    </div>
+  </div>
+
+  <!-- ENGLISH OUTPUT PANEL -->
+  <div class="panel en-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>English</span>
+        <span class="lang-badge out" id="en-badge">output</span>
+      </div>
+      <div class="panel-actions">
+        <button class="btn btn-read" id="en-tts-btn">&#x25B6; Read</button>
+        <button class="btn btn-ghost" id="en-copy-btn">Copy</button>
+      </div>
+    </div>
+    <textarea
+      id="en-text"
+      placeholder="Translation will appear here..."
+      dir="ltr"
+      spellcheck="false"
+      readonly
+    ></textarea>
+    <div class="status-bar" id="en-status">
+      <span id="en-status-text"></span>
+      <span class="char-count" id="en-char-count">0 chars</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-bar">
+  <button id="clear-btn">Clear All</button>
+</div>
+
+<script>
+  var enText       = document.getElementById('en-text');
+  var arText       = document.getElementById('ar-text');
+  var arMicBtn     = document.getElementById('ar-mic-btn');
+  var enTtsBtn     = document.getElementById('en-tts-btn');
+  var arTtsBtn     = document.getElementById('ar-tts-btn');
+  var enCopyBtn    = document.getElementById('en-copy-btn');
+  var arCopyBtn    = document.getElementById('ar-copy-btn');
+  var enStatus     = document.getElementById('en-status');
+  var arStatus     = document.getElementById('ar-status');
+  var enCharCount  = document.getElementById('en-char-count');
+  var arCharCount  = document.getElementById('ar-char-count');
+  var enBadge      = document.getElementById('en-badge');
+  var arBadge      = document.getElementById('ar-badge');
+  var translateBtn = document.getElementById('translate-btn');
+  var clearBtn     = document.getElementById('clear-btn');
+
+  arText.addEventListener('input', function() {
+    arCharCount.textContent = arText.value.length + ' chars';
+  });
+
+  function setStatus(el, msg, type) {
+    var span = el.querySelector('span:first-child') || el;
+    if (span.id && span.id.endsWith('-text')) { span.textContent = msg; }
+    else { el.textContent = msg; }
+    el.className = 'status-bar' + (type ? ' ' + type : '');
+  }
+
+  function setBadge(el, label, cls) {
+    el.textContent = label;
+    el.className = 'lang-badge' + (cls ? ' ' + cls : '');
+  }
+
+  clearBtn.addEventListener('click', function() {
+    enText.value = '';
+    arText.value = '';
+    enCharCount.textContent = '0 chars';
+    arCharCount.textContent = '0 chars';
+    setStatus(enStatus, '', '');
+    setStatus(arStatus, '', '');
+    setBadge(arBadge, 'input', 'active');
+    setBadge(enBadge, 'output', 'out');
+  });
+
+  // --- Translation ---
+
+  var TAJWEED_MAP = [
+    // === Chapter-level headings (longest compound first) ===
+    ['أحكام النون الساكنة والتنوين', 'Ahkam al-Noon al-Sakinah wal-Tanwin'],
+    ['أحكام الميم الساكنة', 'Ahkam al-Meem al-Sakinah'],
+    ['أحكام المدود', 'Ahkam al-Mudood'],
+    ['التفخيم والترقيق', 'Tafkhim wal-Tarqiq'],
+    ['التقاء الساكنين', "Iltiqaa' al-Sakinayn"],
+
+    // === Huroof groupings ===
+    ['الحروف الشمسية', 'Al-Huroof al-Shamsiyya'],
+    ['الحروف القمرية', 'Al-Huroof al-Qamariyya'],
+    ['الحروف المرققة', 'Al-Huroof al-Muraqqaqa'],
+    ['حروف الاستعلاء', "Huroof al-Isti'la"],
+    ['حروف الإطباق', 'Huroof al-Itbaq'],
+    ['حروف الحلق', 'Huroof al-Halq'],
+    ['حروف مقطعة', "Huroof Muqatta'ah"],
+    ['فواتح السور', 'Fawatih al-Suwar'],
+
+    // === Noon Sakinah / Tanwin rules ===
+    ['إدغام بغنة', 'Idgham bil Ghunnah'],
+    ['إدغام بلا غنة', 'Idgham bila Ghunnah'],
+    ['إخفاء حقيقي', 'Ikhfa Haqiqi'],
+    ['إظهار حلقي', 'Izhar Halqi'],
+
+    // === Meem Sakinah rules ===
+    ['إخفاء شفوي', 'Ikhfa Shafawi'],
+    ['إدغام شفوي', 'Idgham Shafawi'],
+    ['إدغام مثلين صغير', 'Idgham Mithlain Saghir'],
+    ['إظهار شفوي', 'Izhar Shafawi'],
+
+    // === Idgham sub-types ===
+    ['إدغام متماثلين صغير', 'Idgham Mutamathalain Saghir'],
+
+    // === Hamzah types ===
+    ['همزة الوصل', 'Hamzat al-Wasl'],
+    ['همزة القطع', "Hamzat al-Qat'"],
+
+    // === Ra rules ===
+    ['راء مفخمة', 'Ra Mufakhkhamah'],
+    ['راء مرققة', 'Ra Muraqqaqah'],
+
+    // === Sifaat compound ===
+    ['صفة الجهر', 'Sifat al-Jahr'],
+    ['صفة الهمس', 'Sifat al-Hams'],
+    ['صفة الشدة', 'Sifat al-Shiddah'],
+    ['صفة الرخاوة', 'Sifat al-Rakhawah'],
+    ['صفة التوسط', 'Sifat al-Tawassut'],
+    ['صفة الاستعلاء', "Sifat al-Isti'la"],
+    ['صفة الاستفال', 'Sifat al-Istifal'],
+    ['صفة الإطباق', 'Sifat al-Itbaq'],
+    ['صفة الانفتاح', 'Sifat al-Infitah'],
+
+    // === Madd compound (longest first) ===
+    ['مد صلة كبرى', 'Madd Silah Kubra'],
+    ['مد صلة صغرى', 'Madd Silah Sughra'],
+    ['مد واجب متصل', 'Madd Wajib Muttasil'],
+    ['مد جائز منفصل', 'Madd Jaiz Munfasil'],
+    ['مد طبيعي', 'Madd Tabii'],
+    ['مد متصل', 'Madd Muttasil'],
+    ['مد منفصل', 'Madd Munfasil'],
+    ['مد لازم', 'Madd Lazim'],
+    ['مد عارض', 'Madd Arid lil Sukoon'],
+    ['مد بدل', 'Madd Badal'],
+    ['مد لين', 'Madd Lin'],
+    ['مد عوض', 'Madd Iwad'],
+    ['مد فرق', 'Madd Farq'],
+    ['مد تمكين', 'Madd Tamkeen'],
+    ['مد صلة', 'Madd Silah'],
+
+    // === Noon/Meem Sakinah terms ===
+    ['نون ساكنة', 'Noon Sakinah'],
+    ['ميم ساكنة', 'Meem Sakinah'],
+    ['لام شمسية', 'Lam Shamsiyya'],
+    ['لام قمرية', 'Lam Qamariyya'],
+
+    // === Qalqalah ===
+    ['قلقلة كبرى', 'Qalqalah Kubra'],
+    ['قلقلة صغرى', 'Qalqalah Sughra'],
+
+    // === Waqf ===
+    ['وقف لازم', 'Waqf Lazim'],
+    ['وقف جائز', 'Waqf Jaiz'],
+    ['وقف ممنوع', "Waqf Mamnu'"],
+
+    // === Stopping signs ===
+    ['روم', 'Rawm'],
+    ['إشمام', 'Ishmam'],
+    ['وصل', 'Wasl'],
+    ['قطع', "Qat'"],
+
+    // === Single-word Tajweed terms ===
+    ['إدغام', 'Idgham'],
+    ['إخفاء', 'Ikhfa'],
+    ['إقلاب', 'Iqlab'],
+    ['إظهار', 'Izhar'],
+    ['قلقلة', 'Qalqalah'],
+    ['تفخيم', 'Tafkhim'],
+    ['ترقيق', 'Tarqiq'],
+    ['تنوين', 'Tanwin'],
+    ['تشديد', 'Tashdeed'],
+    ['تجويد', 'Tajweed'],
+    ['غنة', 'Ghunnah'],
+    ['مخارج', 'Makhaarij'],
+    ['مخرج', 'Makhraj'],
+    ['وقف', 'Waqf'],
+    ['مد', 'Madd'],
+    ['صفات', 'Sifaat'],
+    ['سكون', 'Sukoon'],
+    ['حركة', 'Harakah'],
+    ['فتحة', 'Fathah'],
+    ['ضمة', 'Dammah'],
+    ['كسرة', 'Kasrah'],
+    ['شدة', 'Shaddah'],
+    ['همزة', 'Hamzah'],
+    ['سورة', 'Surah'],
+    ['آية', 'Ayah'],
+    ['جزء', 'Juz'],
+    ['حزب', 'Hizb'],
+    ['استعاذة', "Isti'adha"],
+    ['بسملة', 'Basmala'],
+    ['تعوذ', "Ta'awwudh"],
+    ['ترتيل', 'Tarteel'],
+    ['حفص', 'Hafs'],
+    ['ورش', 'Warsh'],
+    ['رواية', 'Riwayah'],
+    ['قرآن', 'Quran'],
+    ['مصحف', 'Mushaf'],
+    ['إبدال', 'Ibdal'],
+
+    // === Sifaat adjective forms ===
+    ['مجهور', 'Majhur'],
+    ['مهموس', 'Mahmus'],
+    ['شديد', 'Shadid'],
+    ['رخو', 'Rakhw'],
+    ['متوسط', 'Mutawassit'],
+    ['مستعلي', "Musta'li"],
+    ['مستفل', 'Mustafil'],
+    ['منطبق', 'Muntabiq'],
+    ['منفتح', 'Munfatih'],
+    ['مذلق', 'Mudhlaq'],
+    ['مصمت', 'Musmit'],
+    ['مفخم', 'Mufakhkham'],
+    ['مرقق', 'Muraqqaq'],
+    ['لين', 'Lin'],
+
+    // === Single Sifaat nouns ===
+    ['جهر', 'Jahr'],
+    ['همس', 'Hams'],
+    ['رخاوة', 'Rakhawah'],
+    ['توسط', 'Tawassut'],
+    ['استعلاء', "Isti'la"],
+    ['استفال', 'Istifal'],
+    ['إطباق', 'Itbaq'],
+    ['انفتاح', 'Infitah'],
+    ['إذلاق', 'Idhlaq'],
+    ['إصمات', 'Ismat'],
+
+    // === 29 Letter names ===
+    ['ألف', 'Alif'],
+    ['باء', 'Ba'],
+    ['تاء', 'Ta'],
+    ['ثاء', 'Tha'],
+    ['جيم', 'Jim'],
+    ['حاء', 'Ha'],
+    ['خاء', 'Kha'],
+    ['دال', 'Dal'],
+    ['ذال', 'Dhal'],
+    ['راء', 'Ra'],
+    ['زاي', 'Zayn'],
+    ['سين', 'Sin'],
+    ['شين', 'Shin'],
+    ['صاد', 'Sad'],
+    ['ضاد', 'Dad'],
+    ['طاء', 'Ta (Emphatic)'],
+    ['ظاء', 'Dha'],
+    ['عين', 'Ain'],
+    ['غين', 'Ghain'],
+    ['فاء', 'Fa'],
+    ['قاف', 'Qaf'],
+    ['كاف', 'Kaf'],
+    ['لام', 'Lam'],
+    ['ميم', 'Meem'],
+    ['نون', 'Noon'],
+    ['هاء', 'Ha (Light)'],
+    ['واو', 'Waw'],
+    ['لا', 'La'],
+    ['ياء', 'Ya']
+  ];
+
+  // AR->EN: strip diacritics, normalise alef variants, match terms with optional
+  // Arabic prefixes (al-, bi-, wa-, etc.) so words like al-idgham still resolve to Idgham.
+  function preprocessArabic(text) {
+    var clean = text.replace(/[\u0610-\u061a\u064b-\u065f\u06d6-\u06dc\u06df-\u06ed]/g, '');
+    // Normalise alef variants (speech-rec sometimes uses wrong form)
+    clean = clean.replace(/[\u0622\u0623\u0625]/g, '\u0627');
+    for (var i = 0; i < TAJWEED_MAP.length; i++) {
+      var arabic  = TAJWEED_MAP[i][0].replace(/[\u0622\u0623\u0625]/g, '\u0627');
+      var english = TAJWEED_MAP[i][1];
+      var pat = arabic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Optional prefix: \u0627\u0644 (al-) or single-char proclitics
+      pat = '(?:\u0627\u0644|[\u0628\u0644\u0648\u0641\u0643])?' + pat;
+      clean = clean.replace(new RegExp(pat, 'g'), english);
+    }
+    return clean;
+  }
+
+  // EN->AR: after Google translates, replace any surviving English Tajweed terms
+  // with their proper Arabic equivalents (Google sometimes keeps them in Latin script)
+  function postprocessArabic(text) {
+    var result = text; 
+    for (var i = 0; i < TAJWEED_MAP.length; i++) {
+      var escaped = TAJWEED_MAP[i][1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      result = result.replace(new RegExp(escaped, 'gi'), TAJWEED_MAP[i][0]);
+    }
+    return result;
+  }
+
+  async function translateWithGoogle(text, from, to) {
+    var query = (from === 'ar') ? preprocessArabic(text) : text;
+    var url = 'https://translate.googleapis.com/translate_a/single'
+      + '?client=gtx&sl=' + from + '&tl=' + to
+      + '&dt=t&q=' + encodeURIComponent(query);
+    var res    = await fetch(url);
+    var data   = await res.json();
+    var result = data[0].map(function(item) { return item[0]; }).filter(Boolean).join('');
+    return (to === 'ar') ? postprocessArabic(result) : result;
+  }
+
+  async function doTranslate(text, from, to, statusEl, outputEl, outputCharCount) {
+    statusEl.innerHTML = '<span class="spinner"></span> Translating...';
+    statusEl.className = 'status-bar loading';
+    try {
+      var result = await translateWithGoogle(text, from, to);
+      outputEl.value = result;
+      outputCharCount.textContent = result.length;
+      setStatus(statusEl, 'Translated', 'success');
+    } catch (e) {
+      setStatus(statusEl, 'Translation failed - check connection', 'error');
+    }
+  }
+
+
+  async function doTranslate(text, from, to, statusEl, outputEl, outputCharCount) {
+    statusEl.innerHTML = '<span class="spinner"></span><span>' + 'Translating...' + '</span><span class="char-count" id="' + outputCharCount.id + '">' + outputCharCount.textContent + '</span>';
+    statusEl.className = 'status-bar loading';
+    try {
+      var result = await translateWithGoogle(text, from, to);
+      outputEl.value = result;
+      outputCharCount.textContent = result.length + ' chars';
+      setStatus(statusEl, 'Translated', 'success');
+    } catch (e) {
+      setStatus(statusEl, 'Translation failed - check connection', 'error');
+    }
+  }
+
+  function triggerTranslate() {
+    var text = arText.value.trim();
+    if (!text) return;
+    setBadge(arBadge, 'input', 'active');
+    setBadge(enBadge, 'output', 'out');
+    doTranslate(text, 'ar', 'en', enStatus, enText, enCharCount);
+  }
+
+  translateBtn.addEventListener('click', triggerTranslate);
+
+  arText.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 768) {
+      e.preventDefault();
+      triggerTranslate();
+    }
+  });
+
+  // --- Speech Recognition ---
+
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  var activeRecordingFor = null;
+
+  function stopRecording() {
+    if (recognition && activeRecordingFor) recognition.stop();
+  }
+
+  function startRecording() {
+    if (!SpeechRecognition) return;
+
+    if (activeRecordingFor) {
+      recognition.stop();
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang           = 'ar-SA';
+    recognition.continuous     = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = function() {
+      activeRecordingFor = 'ar';
+      arMicBtn.classList.add('recording');
+      arMicBtn.textContent = 'Stop';
+      setStatus(arStatus, 'Listening...', 'loading');
+    };
+
+    recognition.onresult = function(e) {
+      var interim = '', final = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        var t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) { final += t; } else { interim += t; }
+      }
+      var heard = final || interim;
+      arText.value = heard;
+      arCharCount.textContent = heard.length + ' chars';
+    };
+
+    recognition.onend = function() {
+      activeRecordingFor = null;
+      arMicBtn.classList.remove('recording');
+      arMicBtn.textContent = '\u1F3A4 Speak';
+      arMicBtn.innerHTML = '&#x1F3A4; Speak';
+      setStatus(arStatus, '', '');
+
+      var spoken = arText.value.trim();
+      if (!spoken) return;
+
+      setBadge(arBadge, 'input', 'active');
+      setBadge(enBadge, 'output', 'out');
+      doTranslate(spoken, 'ar', 'en', enStatus, enText, enCharCount);
+    };
+
+    recognition.onerror = function(e) {
+      activeRecordingFor = null;
+      arMicBtn.classList.remove('recording');
+      arMicBtn.innerHTML = '&#x1F3A4; Speak';
+      var msgs = {
+        'not-allowed': 'Microphone access denied',
+        'no-speech':   'No speech detected - try again',
+        'network':     'Network error'
+      };
+      setStatus(arStatus, msgs[e.error] || e.error, 'error');
+    };
+
+    recognition.start();
+  }
+
+  if (SpeechRecognition) {
+    arMicBtn.addEventListener('click', function() { startRecording(); });
+  } else {
+    arMicBtn.textContent = 'Mic not supported';
+    arMicBtn.disabled = true;
+    setStatus(arStatus, 'Use Chrome or Edge for voice input', 'error');
+  }
+
+  // --- Text-to-Speech ---
+
+  function speakText(text, lang) {
+    if (!window.speechSynthesis || !text) return null;
+    window.speechSynthesis.cancel();
+    var utt  = new SpeechSynthesisUtterance(text);
+    utt.lang = lang === 'en' ? 'en-US' : 'ar-SA';
+    utt.rate = 0.9;
+    var voices = window.speechSynthesis.getVoices();
+    var prefix = lang === 'en' ? 'en' : 'ar';
+    var match  = voices.find(function(v) { return v.lang.startsWith(prefix); });
+    if (match) utt.voice = match;
+    return utt;
+  }
+
+  function setupTts(btn, textEl, lang) {
+    btn.addEventListener('click', function() {
+      var utt = speakText(textEl.value.trim(), lang);
+      if (!utt) return;
+      utt.onstart = function() { btn.textContent = 'Speaking...'; btn.disabled = true; };
+      utt.onend   = function() { btn.innerHTML = '&#x25B6; Read'; btn.disabled = false; };
+      utt.onerror = function() { btn.innerHTML = '&#x25B6; Read'; btn.disabled = false; };
+      window.speechSynthesis.speak(utt);
+    });
+  }
+
+  setupTts(arTtsBtn, arText, 'ar');
+  setupTts(enTtsBtn, enText, 'en');
+
+  if (window.speechSynthesis) {
+    window.speechSynthesis.addEventListener('voiceschanged', function() {});
+  }
+
+  // --- Copy ---
+
+  function setupCopy(btn, textEl) {
+    btn.addEventListener('click', async function() {
+      var text = textEl.value.trim();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      } catch (e) {
+        btn.textContent = 'Failed';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      }
+    });
+  }
+
+  setupCopy(arCopyBtn, arText);
+  setupCopy(enCopyBtn, enText);
+</script>
+
+</body>
+</html>
